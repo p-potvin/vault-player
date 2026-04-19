@@ -1,2 +1,5 @@
 # VaultWares Git Submodule Manifest
 # Pattern: [Target Folder] [GitHub HTTPS URL] [Branch/Tag]
+
+vaultwares-agentciation https://github.com/p-potvin/vaultwares-agentciation.git main
+vault-themes https://github.com/p-potvin/vault-themes.git main
