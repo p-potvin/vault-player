@@ -1,100 +1,52 @@
-# VaultPlayer
+<img src="https://raw.githubusercontent.com/p-potvin/vaultwares-docs/main/logo/vaultwares-logo.svg">
 
-**Privacy first. Security in service.**
+# vault-player
 
-VaultPlayer is a privacy-first media player built by [VaultWares](https://github.com/p-potvin). It is designed for secure, local-first video playback with multi-agent AI coordination for text, image, video, and workflow processing.
+**Fully Encrypted AI-Powered Video Player**  
+**Part of the VaultWares Ecosystem** • <a href="https://docs.vaultwares.com">docs.vaultwares.com</a> • <a href="https://vaultwares.com">vaultwares.com</a>
 
-## Mission
+**Privacy-first media player with real-time AI audio/video filters, effects, and multi-agent coordination. All processing stays local and encrypted.**
 
-Create privacy-first technology that is secure by default, understandable by design, and accessible to everyone — in English and French.
+## Overview
+VaultPlayer delivers secure, local-first video playback with dynamic AI enhancements (filters, subtitles, translation, object detection, style transfer, etc.) powered by realtime-stt, vaultwares-pipelines, and the VaultWares agent team.
 
-### Core Values
-
-1. **Privacy** — Data minimization. Local-first. No tracking.
-2. **Security** — In service of people, never theatrics.
-3. **Functionality** — For everyone. Clear, fast, bilingual.
-
-## Architecture
-
-VaultPlayer uses a Redis-based multi-agent coordination system. All agents inherit from `ExtrovertAgent` and are overseen by `LonelyManager`.
-
-| Agent | Type | Skills |
-|---|---|---|
-| **TextAgent** | `text` | Text generation, captioning, prompt engineering, VQA |
-| **ImageAgent** | `image` | Image generation, editing, masking, inpainting, outpainting |
-| **VideoAgent** | `video` | Video trimming, frame sampling, effects, analysis, captioning |
-| **WorkflowAgent** | `workflow` | Workflow parsing, ComfyUI/Diffusion export, validation |
-
-See [agent_manifest.md](agent_manifest.md) for full agent documentation.
-
-## Branding
-
-VaultPlayer follows the VaultWares Brand Guide defined in [vault-themes](https://github.com/p-potvin/vault-themes).
-
-### Color System (Solarized-inspired)
-
-| Token | Dark | Light |
-|---|---|---|
-| Base / Background | `#002B36` | `#FDF6E3` |
-| Slate | `#4A5459` | — |
-| Cyan | `#21B8CC` | `#21B8CC` |
-| Green | `#4ECC21` | — |
-| Gold Accent | `#CC9B21` | — |
-| Burgundy | — | `#A63D40` |
-| Text | `#F8FAFC` | `#002B36` |
-| Muted | — | `#586E75` |
-
-### Typography
-
-```
-font-family: "Segoe UI Semilight", "Segoe UI", Inter, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-```
-
-- Weight: 300–500
-- Tracking: -0.01em headings
-- Languages: EN • FR
-
-### Theme Integration
-
-VaultPlayer includes a local theme manager (`Brand/theme_manager.py`) synced from vault-themes. All UI surfaces must use named theme tokens — never hardcode ad-hoc colors.
-
-- Theme mode must be explicit: `light` or `dark`.
-- Every theme must define at least `background` and `accent` role colors.
-- WCAG AA compliance: body text ≥ 4.5:1 contrast, large text ≥ 3.0:1.
-- Theme names are Title Case; IDs are kebab-case.
+## Features
+- End-to-end encryption for media and filters
+- Real-time AI effects using local models
+- Multi-agent coordination (Text, Image, Video, Workflow agents)
+- Seamless integration with vault-flows GUI and pipelines
+- Bilingual (EN/FR) interface
+- Redis-based agent orchestration (upgraded to Google ADK where applicable)
+- Theme support via vault-themes submodule
 
 ## Quick Start
 
 ```bash
-# 1. Install dependencies
+git clone https://github.com/p-potvin/vault-player.git
+cd vault-player
+git submodule update --init --recursive
 pip install -r requirements.txt
 
-# 2. Initialize submodules
-git submodule update --init
+# Start Redis (required for agents)
+redis-server
 
-# 3. Start Redis
-redis-server vaultwares-agentciation/redis.conf
-
-# 4. Run the full system
+# Run full coordinated system
 python run_coordinated_system.py
-
-# Or run agents individually:
-python run_lonely_manager.py &
-python run_worker_agent.py --type text --id text-agent-1 &
-python run_worker_agent.py --type video --id video-agent-1 &
 ```
+Architecture &amp; Agent Integration
+Fully synchronized with the VaultWares Agent Knowledge Dissemination System:
+→ https://raw.githubusercontent.com/p-potvin/vaultwares-docs/main/agents/knowledge-dissemination.mdx
+Uses the Google ADK-powered team from vaultwares-agentciation via the invoke_vaultwares_team skill for complex real-time processing.
+See PLAYER_ARCHITECTURE_NOTE.md, agent_manifest.md, and agent folders for full details.
+Privacy &amp; Security
 
-## Dependencies
+All data and processing local-first
+Full encryption layer
+No telemetry or external calls by default
+Detailed threat model in central VaultWares docs
 
-- **vaultwares-agentciation** — Multi-agent coordination framework (git submodule)
-- **vault-themes** — Branding, themes, and visual guidelines
-
-See [VAULT_DEPENDENCIES.txt](VAULT_DEPENDENCIES.txt) for the full submodule manifest.
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md) for the project roadmap.
-
-## License
-
-See [LICENSE](LICENSE) for license information.
+Contributing
+See CONTRIBUTING.md and the central Brand Guidelines.
+License
+GPL-3.0 (see LICENSE)
+Your data. Your rules. VaultWares.
