@@ -1,3 +1,7 @@
+# VaultWares Agent Knowledge Sync
+# This player is part of the official VaultWares ecosystem.
+# Uses invoke_vaultwares_team skill from vaultwares-agentciation for advanced coordination.
+
 """
 Entrypoint for running a single Worker Agent as a standalone process.
 Supports TextAgent, ImageAgent, VideoAgent, and WorkflowAgent.

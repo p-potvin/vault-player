@@ -1,3 +1,7 @@
+# VaultWares Agent Knowledge Sync
+# This player is part of the official VaultWares ecosystem.
+# Uses invoke_vaultwares_team skill from vaultwares-agentciation for advanced coordination.
+
 """
 Entrypoint for the full VaultWares multi-agent coordination system.
 
