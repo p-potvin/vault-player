@@ -25,7 +25,7 @@
 - [x] Implement digital signatures (ML-DSA-65 via oqs)
 - [x] Implement signed-envelope seal/open API
 - [x] SecurityAgent integrated into multi-agent coordination system
-- [ ] Integrate PQC decryption pipeline into the video player component
+- [x] Integrate PQC decryption pipeline into the video player component
 
 ## In-Process Plugins (Phase 4)
 

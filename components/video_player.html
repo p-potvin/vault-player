@@ -1,43 +1,397 @@
 <style>
-/* Video Player Modal */
-    #video-modal {
-      display:none; position:fixed; top:32px; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index: 200; align-items:center; justify-content:center;
-    }
-    #close-modal { position:absolute; top:20px; right:20px; font-size:24px; color:white; cursor:pointer; background:none; border:none; z-index: 201; }
-    .video-wrapper { position:relative; width:100vw; height:calc(100vh - 32px); overflow:hidden; background:#000; display:flex; align-items:center; justify-content:center; }
-    #video-player { width:100%; height:100%; object-fit:contain; outline:none; cursor:pointer; }
-    #custom-controls { position:absolute; bottom:0; left:0; width:100%; padding:20px; padding-top:40px; background:linear-gradient(transparent, rgba(0,0,0,0.8)); opacity:0; transition:opacity 0.3s; display:flex; flex-direction:column; gap:10px; }
-    .video-wrapper:hover #custom-controls { opacity:1; }
+  /* -----------------------------------------------------------------------
+   * VaultWares theme tokens
+   * These mirror the vault-themes design system. When vault-themes is
+   * initialised as a submodule, an outer :root block may override them.
+   * ----------------------------------------------------------------------- */
+  :root {
+    --vault-bg:            #09090f;
+    --vault-surface:       #121220;
+    --vault-surface-2:     #1a1a2e;
+    --vault-border:        rgba(110, 80, 246, 0.25);
+    --vault-accent:        #6e50f6;
+    --vault-accent-hover:  #8a72f8;
+    --vault-accent-glow:   rgba(110, 80, 246, 0.35);
+    --vault-text:          #ddddf0;
+    --vault-text-muted:    #7878a0;
+    --vault-success:       #4ade80;
+    --vault-error:         #f87171;
+    --vault-radius:        6px;
+    --vault-transition:    0.2s ease;
+  }
 
-    .volume-container:hover .volume-slider-wrapper { display: flex !important; }
+  /* -----------------------------------------------------------------------
+   * Video Player Modal
+   * ----------------------------------------------------------------------- */
+  #video-modal {
+    display: none;
+    position: fixed;
+    top: 32px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.92);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #close-modal {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--vault-text-muted);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    border-radius: var(--vault-radius);
+    z-index: 201;
+    transition: color var(--vault-transition), background var(--vault-transition);
+  }
+  #close-modal:hover,
+  #close-modal:focus-visible {
+    color: var(--vault-text);
+    background: var(--vault-surface-2);
+    outline: none;
+  }
+
+  .video-wrapper {
+    position: relative;
+    width: 100vw;
+    height: calc(100vh - 32px);
+    overflow: hidden;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #video-player {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* -----------------------------------------------------------------------
+   * Custom Controls Bar
+   * ----------------------------------------------------------------------- */
+  #custom-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 36px 20px 16px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.82));
+    opacity: 0;
+    transition: opacity 0.3s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+  }
+  .video-wrapper:hover #custom-controls,
+  .video-wrapper:focus-within #custom-controls {
+    opacity: 1;
+  }
+
+  /* Seek bar */
+  #seek-area {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    cursor: pointer;
+  }
+  #seek-bg {
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  #seek-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--vault-accent);
+    border-radius: 3px;
+    pointer-events: none;
+    transition: width 0.08s linear;
+  }
+  #seek-area:hover #seek-bg {
+    height: 5px;
+    margin-top: 7px;
+  }
+  #seek-hover-preview {
+    position: absolute;
+    bottom: 28px;
+    left: 0;
+    width: 160px;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border: 1px solid var(--vault-border);
+    border-radius: var(--vault-radius);
+    display: none;
+    background-size: cover;
+    pointer-events: none;
+    transform: translateX(-50%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Control buttons row */
+  .controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--vault-text);
+    font-size: 13px;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  .controls-left {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .ctrl-btn {
+    background: none;
+    border: none;
+    color: var(--vault-text-muted);
+    font-size: 17px;
+    cursor: pointer;
+    padding: 5px 7px;
+    border-radius: var(--vault-radius);
+    line-height: 1;
+    transition: color var(--vault-transition), background var(--vault-transition);
+  }
+  .ctrl-btn:hover,
+  .ctrl-btn:focus-visible {
+    color: var(--vault-text);
+    background: rgba(255, 255, 255, 0.08);
+    outline: none;
+  }
+  .ctrl-btn:active {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  #time-display {
+    font-size: 12px;
+    color: var(--vault-text-muted);
+    margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  /* Volume */
+  .volume-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    height: 30px;
+  }
+  .volume-container:hover .volume-slider-wrapper,
+  .volume-container:focus-within .volume-slider-wrapper {
+    display: flex !important;
+  }
+  .volume-slider-wrapper {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    background: var(--vault-surface-2);
+    border: 1px solid var(--vault-border);
+    padding: 12px 10px;
+    border-radius: var(--vault-radius);
+    z-index: 205;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  }
+  #volume-slider {
+    writing-mode: bt-lr;
+    -webkit-appearance: slider-vertical;
+    width: 8px;
+    height: 72px;
+    accent-color: var(--vault-accent);
+    cursor: pointer;
+  }
+
+  /* Encrypted badge shown when playing a vault-encrypted file */
+  #pqc-badge {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--vault-accent);
+    background: rgba(110, 80, 246, 0.12);
+    border: 1px solid var(--vault-border);
+    border-radius: 20px;
+    padding: 2px 9px;
+    font-family: system-ui, -apple-system, sans-serif;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  #pqc-badge.visible {
+    display: flex;
+  }
+  #pqc-badge svg {
+    flex-shrink: 0;
+  }
+
+  /* -----------------------------------------------------------------------
+   * Decryption Overlay
+   * ----------------------------------------------------------------------- */
+  #decrypt-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: var(--vault-bg);
+    z-index: 210;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: var(--vault-text);
+  }
+  #decrypt-overlay.visible {
+    display: flex;
+  }
+
+  .decrypt-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--vault-surface-2);
+    border: 2px solid var(--vault-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vault-accent);
+  }
+  .decrypt-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Spinning ring for loading state */
+  .decrypt-spinner {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid var(--vault-surface-2);
+    border-top-color: var(--vault-accent);
+    animation: vault-spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes vault-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .decrypt-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--vault-text);
+    letter-spacing: 0.01em;
+  }
+  .decrypt-sub {
+    font-size: 12px;
+    color: var(--vault-text-muted);
+    max-width: 300px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .decrypt-sub.error {
+    color: var(--vault-error);
+  }
+
+  .decrypt-dismiss {
+    margin-top: 4px;
+    padding: 7px 20px;
+    background: var(--vault-surface-2);
+    border: 1px solid var(--vault-border);
+    border-radius: var(--vault-radius);
+    color: var(--vault-text);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background var(--vault-transition), border-color var(--vault-transition);
+    display: none;
+  }
+  .decrypt-dismiss:hover,
+  .decrypt-dismiss:focus-visible {
+    background: var(--vault-surface);
+    border-color: var(--vault-accent);
+    outline: none;
+  }
+  .decrypt-dismiss.visible {
+    display: block;
+  }
 </style>
 
-<div id="video-modal">
-    <button id="close-modal">&times;</button>
-    <div class="video-wrapper">
-       <video id="video-player" autoplay></video>
-       <div id="custom-controls">
-          <div id="seek-area" style="position:relative; width:100%; height:20px; cursor:pointer;">
-             <div style="width:100%; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; margin-top:8px;" id="seek-bg">
-                <div id="seek-fill" style="width:0%; height:100%; background:var(--vault-accent); border-radius:2px; pointer-events:none;"></div>
-             </div>
-             <div id="seek-hover-preview" style="position:absolute; bottom:25px; left:0; width:160px; aspect-ratio:16/9; background:#000; border:1px solid #fff; border-radius:4px; display:none; background-size:cover; pointer-events:none; transform:translateX(-50%);"></div>
+<div id="video-modal" role="dialog" aria-modal="true" aria-label="Vault Player">
+  <button id="close-modal" aria-label="Close player" title="Close (Esc)">&times;</button>
+  <div class="video-wrapper">
+    <video id="video-player" autoplay></video>
+
+    <!-- Decryption overlay: shown while decrypting or on error -->
+    <div id="decrypt-overlay" role="status" aria-live="polite">
+      <div class="decrypt-spinner" id="decrypt-spinner" aria-hidden="true"></div>
+      <div class="decrypt-icon" id="decrypt-icon" aria-hidden="true" style="display:none;">
+        <!-- lock icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <p class="decrypt-title" id="decrypt-title">Decrypting Media</p>
+      <p class="decrypt-sub" id="decrypt-sub">Applying ML-KEM-768 + ChaCha20-Poly1305…</p>
+      <button class="decrypt-dismiss" id="decrypt-dismiss" aria-label="Dismiss">Dismiss</button>
+    </div>
+
+    <div id="custom-controls" aria-label="Player controls">
+      <!-- Seek bar -->
+      <div id="seek-area" role="slider" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+        <div id="seek-bg">
+          <div id="seek-fill"></div>
+        </div>
+        <div id="seek-hover-preview" aria-hidden="true"></div>
+      </div>
+
+      <!-- Button row -->
+      <div class="controls-row">
+        <div class="controls-left">
+          <button id="btn-prev"      class="ctrl-btn" title="Previous"           aria-label="Previous media file">&#9198;</button>
+          <button id="btn-playpause" class="ctrl-btn" title="Play / Pause (Space)" aria-label="Pause">&#10074;&#10074;</button>
+          <button id="btn-next"      class="ctrl-btn" title="Next"               aria-label="Next media file">&#9199;</button>
+
+          <!-- Volume -->
+          <div class="volume-container" role="group" aria-label="Volume">
+            <button class="ctrl-btn" aria-label="Volume" title="Volume (↑ ↓)">&#128266;</button>
+            <div class="volume-slider-wrapper">
+              <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5"
+                     aria-label="Volume" title="Volume">
+            </div>
           </div>
-          <div style="display:flex; justify-content:space-between; color:#fff; font-size:13px; align-items:center;">
-             <div style="display:flex; gap:15px; align-items:center;">
-                <button id="btn-prev" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;" title="Previous">&#9198;</button>
-                <button id="btn-playpause" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;" title="Play/Pause (Space)">&#10074;&#10074;</button>
-                <button id="btn-next" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;" title="Next">&#9199;</button>
-                <div class="volume-container" style="position:relative; display:flex; align-items:center; cursor:pointer; height:30px;">
-                   <span style="font-size:16px;">&#128266;</span>
-                   <div class="volume-slider-wrapper" style="position:absolute; bottom:25px; left:50%; transform:translateX(-50%); display:none; background:rgba(0,0,0,0.8); padding:15px 10px; border-radius:4px; z-index:205;">
-                      <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical; width:8px; height:80px; accent-color:var(--vault-accent); cursor:pointer;" title="Volume (Up/Down)">
-                   </div>
-                </div>
-                <span id="time-display" style="margin-left:10px;">0:00 / 0:00</span>
-             </div>
-             <button id="btn-fullscreen" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;" title="Fullscreen (F)">&#x26F6;</button>
-          </div>
-       </div>
+
+          <span id="time-display" aria-live="off">0:00 / 0:00</span>
+
+          <!-- PQC encrypted badge -->
+          <span id="pqc-badge" aria-label="Post-quantum encrypted" title="ML-KEM-768 · ChaCha20-Poly1305">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            PQC
+          </span>
+        </div>
+
+        <button id="btn-fullscreen" class="ctrl-btn" title="Fullscreen (F)" aria-label="Toggle fullscreen">&#x26F6;</button>
+      </div>
     </div>
   </div>
+</div>

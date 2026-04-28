@@ -401,3 +401,84 @@ def open_envelope(
     return decryptor.decrypt(
         envelope.ciphertext, envelope.tag, envelope.nonce, associated_data=associated_data
     )
+
+
+# ---------------------------------------------------------------------------
+# File-based helpers: seal_media_file / decrypt_media_file
+# ---------------------------------------------------------------------------
+
+
+def seal_media_file(
+    input_path: str,
+    output_path: str,
+    recipient_kem_public_key: bytes,
+    sender_sig_keypair: Optional[PQCKeyPair] = None,
+    associated_data: Optional[bytes] = None,
+) -> None:
+    """
+    Read a media file, encrypt it, and write the sealed :class:`SignedEnvelope`
+    to *output_path*.
+
+    The output file is a raw binary serialization produced by
+    :meth:`SignedEnvelope.to_bytes`.  Use :func:`decrypt_media_file` to
+    reverse the operation.
+
+    Args:
+        input_path: Path to the plaintext media file to encrypt.
+        output_path: Destination path for the encrypted ``.vault`` file.
+        recipient_kem_public_key: ML-KEM-768 public key of the recipient.
+        sender_sig_keypair: Optional ML-DSA-65 keypair to sign the envelope.
+        associated_data: Optional bytes bound to the ciphertext (e.g. a
+            session identifier).  Must be supplied identically to
+            :func:`decrypt_media_file`.
+    """
+    with open(input_path, "rb") as fh:
+        plaintext = fh.read()
+    envelope = seal(
+        plaintext,
+        recipient_kem_public_key,
+        sender_sig_keypair=sender_sig_keypair,
+        associated_data=associated_data,
+    )
+    with open(output_path, "wb") as fh:
+        fh.write(envelope.to_bytes())
+
+
+def decrypt_media_file(
+    file_path: str,
+    recipient_kem_private_key: bytes,
+    associated_data: Optional[bytes] = None,
+    verify_signature: bool = True,
+) -> bytes:
+    """
+    Read a ``.vault`` encrypted media file and return the decrypted bytes.
+
+    The file must contain a binary-serialized :class:`SignedEnvelope` as
+    produced by :func:`seal_media_file`.
+
+    Args:
+        file_path: Path to the ``.vault`` encrypted file.
+        recipient_kem_private_key: ML-KEM-768 private key of the recipient.
+        associated_data: Must match the value used during sealing.
+        verify_signature: When ``True`` (default), the envelope's ML-DSA-65
+            signature is verified before decryption.  Set to ``False`` only
+            for envelopes that were sealed without a sender signature.
+
+    Returns:
+        The decrypted plaintext bytes of the original media file.
+
+    Raises:
+        :class:`PQCDecryptionError`: If decryption or authentication fails.
+        :class:`ValueError`: If signature verification fails or the envelope
+            is malformed.
+        :class:`PQCUnavailableError`: If a required PQC library is missing.
+    """
+    with open(file_path, "rb") as fh:
+        envelope_bytes = fh.read()
+    envelope = SignedEnvelope.from_bytes(envelope_bytes)
+    return open_envelope(
+        envelope,
+        recipient_kem_private_key,
+        associated_data=associated_data,
+        verify_signature=verify_signature,
+    )

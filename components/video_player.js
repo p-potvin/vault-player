@@ -2,6 +2,10 @@
  * Vault Video Player
  * Extracted from vault-explorer to provide a reusable, hardware-accelerated video player
  * for the VaultWares ecosystem.
+ *
+ * Supports plain file playback as well as PQC-encrypted (.vault) media files.
+ * Encrypted playback is driven by a caller-supplied async `decryptFn` so the
+ * decryption back-end (Python/Electron IPC, WASM, etc.) stays fully decoupled.
  */
 
 export class VaultVideoPlayer {
@@ -12,6 +16,9 @@ export class VaultVideoPlayer {
         this.currentPlayingIndex = -1;
         this.ffmpegQueue = [];
         this.isFfmpegRunning = false;
+
+        // Active Blob URL for encrypted playback — revoked when the player closes.
+        this._blobUrl = null;
 
         // Will be populated by bindElements
         this.elements = {};
@@ -50,17 +57,28 @@ export class VaultVideoPlayer {
             btnFullscreen: modal.querySelector('#btn-fullscreen'),
             volSlider: modal.querySelector('#volume-slider'),
             timeDisplay: modal.querySelector('#time-display'),
-            btnClose: modal.querySelector('#close-modal')
+            btnClose: modal.querySelector('#close-modal'),
+            decryptOverlay: modal.querySelector('#decrypt-overlay'),
+            decryptSpinner: modal.querySelector('#decrypt-spinner'),
+            decryptIcon: modal.querySelector('#decrypt-icon'),
+            decryptTitle: modal.querySelector('#decrypt-title'),
+            decryptSub: modal.querySelector('#decrypt-sub'),
+            decryptDismiss: modal.querySelector('#decrypt-dismiss'),
+            pqcBadge: modal.querySelector('#pqc-badge'),
         };
 
         this.setupEventListeners();
     }
 
     setupEventListeners() {
-        const { vp, seekArea, seekFill, seekPreview, btnPlay, volSlider, btnFullscreen, timeDisplay, btnClose, modal } = this.elements;
+        const { vp, seekArea, seekFill, seekPreview, btnPlay, volSlider, btnFullscreen, timeDisplay, btnClose, modal, decryptDismiss } = this.elements;
 
         if (btnClose) {
             btnClose.addEventListener('click', () => this.close());
+        }
+
+        if (decryptDismiss) {
+            decryptDismiss.addEventListener('click', () => this._hideDecryptOverlay());
         }
 
         // Initialize volume
@@ -75,7 +93,11 @@ export class VaultVideoPlayer {
             vp.addEventListener('timeupdate', () => {
                 if (!vp.duration) return;
                 if (seekFill) {
-                    seekFill.style.width = (vp.currentTime / vp.duration * 100) + '%';
+                    const pct = (vp.currentTime / vp.duration * 100);
+                    seekFill.style.width = pct + '%';
+                    if (this.elements.seekArea) {
+                        this.elements.seekArea.setAttribute('aria-valuenow', Math.round(pct));
+                    }
                 }
                 if (timeDisplay) {
                     timeDisplay.innerText = this.formatDuration(vp.currentTime) + ' / ' + this.formatDuration(vp.duration);
@@ -180,27 +202,162 @@ export class VaultVideoPlayer {
         const { vp, btnPlay } = this.elements;
         if (vp.paused) {
             vp.play();
-            if (btnPlay) btnPlay.innerHTML = '&#10074;&#10074;';
+            if (btnPlay) {
+                btnPlay.innerHTML = '&#10074;&#10074;';
+                btnPlay.setAttribute('aria-label', 'Pause');
+            }
         } else {
             vp.pause();
-            if (btnPlay) btnPlay.innerHTML = '&#9654;';
+            if (btnPlay) {
+                btnPlay.innerHTML = '&#9654;';
+                btnPlay.setAttribute('aria-label', 'Play');
+            }
         }
     }
 
     play(videoPath, trickplayFolder = null) {
-        const { vp, modal, btnPlay } = this.elements;
+        const { vp, modal, btnPlay, pqcBadge } = this.elements;
+        this._revokeBlobUrl();
         this.trickFrames = [];
         vp.dataset.trickplay = trickplayFolder || '';
         vp.src = this.sanitizePath(videoPath);
-        if (btnPlay) btnPlay.innerHTML = '&#10074;&#10074;';
+        if (btnPlay) {
+            btnPlay.innerHTML = '&#10074;&#10074;';
+            btnPlay.setAttribute('aria-label', 'Pause');
+        }
+        if (pqcBadge) pqcBadge.classList.remove('visible');
         modal.style.display = 'flex';
+    }
+
+    /**
+     * Play a video from an in-memory ArrayBuffer or Uint8Array of already-
+     * decrypted bytes.  A Blob URL is created internally and revoked when the
+     * player is closed.
+     *
+     * @param {ArrayBuffer|Uint8Array} buffer  Decrypted media bytes.
+     * @param {object} [options]
+     * @param {string} [options.mimeType='video/mp4']  MIME type of the media.
+     * @param {boolean} [options.encrypted=false]      Show PQC badge when true.
+     * @param {string|null} [options.trickplayFolder]  Trickplay sprite folder.
+     */
+    playFromBytes(buffer, options = {}) {
+        const { vp, modal, btnPlay, pqcBadge } = this.elements;
+        const mimeType = options.mimeType || 'video/mp4';
+
+        this._revokeBlobUrl();
+        this.trickFrames = [];
+
+        const blob = new Blob([buffer], { type: mimeType });
+        this._blobUrl = URL.createObjectURL(blob);
+
+        vp.dataset.trickplay = options.trickplayFolder || '';
+        vp.src = this._blobUrl;
+
+        if (btnPlay) {
+            btnPlay.innerHTML = '&#10074;&#10074;';
+            btnPlay.setAttribute('aria-label', 'Pause');
+        }
+
+        if (pqcBadge) {
+            if (options.encrypted) {
+                pqcBadge.classList.add('visible');
+            } else {
+                pqcBadge.classList.remove('visible');
+            }
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    /**
+     * Decrypt a PQC-encrypted media payload and begin playback.
+     *
+     * The caller provides `decryptFn`, an async function that receives the
+     * encrypted ArrayBuffer and returns the decrypted ArrayBuffer.  This
+     * keeps the JS player fully decoupled from the underlying crypto
+     * back-end (Python/Electron IPC, WASM, etc.).
+     *
+     * Example (Electron main-process bridge):
+     * ```js
+     * player.playEncrypted(encryptedBuffer, async (buf) => {
+     *     return await ipcRenderer.invoke('pqc-decrypt', buf, keyId);
+     * }, { mimeType: 'video/mp4' });
+     * ```
+     *
+     * @param {ArrayBuffer|Uint8Array} encryptedBuffer  Raw encrypted bytes.
+     * @param {function(ArrayBuffer): Promise<ArrayBuffer>} decryptFn
+     * @param {object} [options]
+     * @param {string} [options.mimeType='video/mp4']
+     * @param {string|null} [options.trickplayFolder]
+     */
+    async playEncrypted(encryptedBuffer, decryptFn, options = {}) {
+        const { modal } = this.elements;
+        modal.style.display = 'flex';
+        this._showDecryptOverlay('loading');
+
+        try {
+            const decrypted = await decryptFn(encryptedBuffer);
+            this._hideDecryptOverlay();
+            this.playFromBytes(decrypted, { ...options, encrypted: true });
+        } catch (err) {
+            this._showDecryptOverlay('error', err.message || 'Decryption failed');
+        }
     }
 
     close() {
         const { vp, modal } = this.elements;
         vp.pause();
         vp.src = "";
+        this._revokeBlobUrl();
+        this._hideDecryptOverlay();
         modal.style.display = 'none';
+    }
+
+    // ------------------------------------------------------------------
+    // Decryption overlay helpers
+    // ------------------------------------------------------------------
+
+    /**
+     * @param {'loading'|'error'} state
+     * @param {string} [errorMessage]
+     */
+    _showDecryptOverlay(state, errorMessage = '') {
+        const { decryptOverlay, decryptSpinner, decryptIcon, decryptTitle, decryptSub, decryptDismiss } = this.elements;
+        if (!decryptOverlay) return;
+
+        decryptOverlay.classList.add('visible');
+
+        if (state === 'loading') {
+            decryptSpinner.style.display = 'block';
+            decryptIcon.style.display = 'none';
+            decryptTitle.textContent = 'Decrypting Media';
+            decryptSub.textContent = 'Applying ML-KEM-768 + ChaCha20-Poly1305…';
+            decryptSub.classList.remove('error');
+            decryptDismiss.classList.remove('visible');
+        } else {
+            decryptSpinner.style.display = 'none';
+            decryptIcon.style.display = 'flex';
+            decryptTitle.textContent = 'Decryption Failed';
+            decryptSub.textContent = errorMessage || 'Could not decrypt the media file.';
+            decryptSub.classList.add('error');
+            decryptDismiss.classList.add('visible');
+        }
+    }
+
+    _hideDecryptOverlay() {
+        const { decryptOverlay } = this.elements;
+        if (decryptOverlay) decryptOverlay.classList.remove('visible');
+    }
+
+    // ------------------------------------------------------------------
+    // Blob URL lifecycle
+    // ------------------------------------------------------------------
+
+    _revokeBlobUrl() {
+        if (this._blobUrl) {
+            URL.revokeObjectURL(this._blobUrl);
+            this._blobUrl = null;
+        }
     }
 
     // Node-side preview generation port from main.js

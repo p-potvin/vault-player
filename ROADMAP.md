@@ -24,7 +24,7 @@
 - [x] High-level `seal` / `open_envelope` API with optional signing
 - [x] `SecurityAgent` — PQC tasks integrated into multi-agent system
 - [x] `agent_security.md` — protocol documentation
-- [ ] Integrate PQC decryption into the player decryption pipeline
+- [x] Integrate PQC decryption into the player decryption pipeline
 
 ## Phase 4 — In-Process Plugin Architecture
 
