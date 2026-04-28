@@ -1,0 +1,43 @@
+<style>
+/* Video Player Modal */
+    #video-modal {
+      display:none; position:fixed; top:32px; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index: 200; align-items:center; justify-content:center;
+    }
+    #close-modal { position:absolute; top:20px; right:20px; font-size:24px; color:white; cursor:pointer; background:none; border:none; z-index: 201; }
+    .video-wrapper { position:relative; width:100vw; height:calc(100vh - 32px); overflow:hidden; background:#000; display:flex; align-items:center; justify-content:center; }
+    #video-player { width:100%; height:100%; object-fit:contain; outline:none; cursor:pointer; }
+    #custom-controls { position:absolute; bottom:0; left:0; width:100%; padding:20px; padding-top:40px; background:linear-gradient(transparent, rgba(0,0,0,0.8)); opacity:0; transition:opacity 0.3s; display:flex; flex-direction:column; gap:10px; }
+    .video-wrapper:hover #custom-controls { opacity:1; }
+
+    .volume-container:hover .volume-slider-wrapper { display: flex !important; }
+</style>
+
+<div id="video-modal">
+    <button id="close-modal">&times;</button>
+    <div class="video-wrapper">
+       <video id="video-player" autoplay></video>
+       <div id="custom-controls">
+          <div id="seek-area" style="position:relative; width:100%; height:20px; cursor:pointer;">
+             <div style="width:100%; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; margin-top:8px;" id="seek-bg">
+                <div id="seek-fill" style="width:0%; height:100%; background:var(--vault-accent); border-radius:2px; pointer-events:none;"></div>
+             </div>
+             <div id="seek-hover-preview" style="position:absolute; bottom:25px; left:0; width:160px; aspect-ratio:16/9; background:#000; border:1px solid #fff; border-radius:4px; display:none; background-size:cover; pointer-events:none; transform:translateX(-50%);"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; color:#fff; font-size:13px; align-items:center;">
+             <div style="display:flex; gap:15px; align-items:center;">
+                <button id="btn-prev" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;" title="Previous">&#9198;</button>
+                <button id="btn-playpause" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;" title="Play/Pause (Space)">&#10074;&#10074;</button>
+                <button id="btn-next" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;" title="Next">&#9199;</button>
+                <div class="volume-container" style="position:relative; display:flex; align-items:center; cursor:pointer; height:30px;">
+                   <span style="font-size:16px;">&#128266;</span>
+                   <div class="volume-slider-wrapper" style="position:absolute; bottom:25px; left:50%; transform:translateX(-50%); display:none; background:rgba(0,0,0,0.8); padding:15px 10px; border-radius:4px; z-index:205;">
+                      <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical; width:8px; height:80px; accent-color:var(--vault-accent); cursor:pointer;" title="Volume (Up/Down)">
+                   </div>
+                </div>
+                <span id="time-display" style="margin-left:10px;">0:00 / 0:00</span>
+             </div>
+             <button id="btn-fullscreen" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;" title="Fullscreen (F)">&#x26F6;</button>
+          </div>
+       </div>
+    </div>
+  </div>
