@@ -17,10 +17,14 @@
 
 ## Phase 3 — Post-Quantum Cryptography (PQC) Protocol
 
-- [ ] Research and design a custom PQC protocol for media encryption
-- [ ] Implement PQC key exchange and stream cipher for the container format
-- [ ] Integrate PQC into the player decryption pipeline
-- [ ] Document protocol specification and threat model
+- [x] Research and design a custom PQC protocol for media encryption
+- [x] Implement ML-KEM-768 key encapsulation (`components/pqc_crypto.py`)
+- [x] Implement ChaCha20-Poly1305 stream cipher for media payloads
+- [x] Implement ML-DSA-65 digital signatures
+- [x] High-level `seal` / `open_envelope` API with optional signing
+- [x] `SecurityAgent` — PQC tasks integrated into multi-agent system
+- [x] `agent_security.md` — protocol documentation
+- [ ] Integrate PQC decryption into the player decryption pipeline
 
 ## Phase 4 — In-Process Plugin Architecture
 

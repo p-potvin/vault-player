@@ -18,10 +18,14 @@
 
 ## PQC Protocol (Phase 3)
 
-- [ ] Research lattice-based and code-based PQC candidates
-- [ ] Draft VaultWares PQC protocol specification
-- [ ] Implement key exchange
-- [ ] Implement stream cipher for media payloads
+- [x] Research lattice-based and code-based PQC candidates
+- [x] Draft VaultWares PQC protocol specification
+- [x] Implement key exchange (ML-KEM-768 via oqs)
+- [x] Implement stream cipher for media payloads (ChaCha20-Poly1305)
+- [x] Implement digital signatures (ML-DSA-65 via oqs)
+- [x] Implement signed-envelope seal/open API
+- [x] SecurityAgent integrated into multi-agent coordination system
+- [ ] Integrate PQC decryption pipeline into the video player component
 
 ## In-Process Plugins (Phase 4)
 
