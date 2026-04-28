@@ -31,6 +31,7 @@ from agents.text_agent import TextAgent
 from agents.image_agent import ImageAgent
 from agents.video_agent import VideoAgent
 from agents.workflow_agent import WorkflowAgent
+from agents.security_agent import SecurityAgent
 
 
 def alert_callback(alert: dict):
@@ -62,8 +63,9 @@ def main():
     image_agent = ImageAgent(agent_id="image-agent")
     video_agent = VideoAgent(agent_id="video-agent")
     workflow_agent = WorkflowAgent(agent_id="workflow-agent")
+    security_agent = SecurityAgent(agent_id="security-agent")
 
-    for agent in (text_agent, image_agent, video_agent, workflow_agent):
+    for agent in (text_agent, image_agent, video_agent, workflow_agent, security_agent):
         agent.start()
         print(f"✅ Agent '{agent.agent_id}' started.")
 
@@ -110,6 +112,19 @@ def main():
         output_path="examples/sample_pipeline_comfyui.json",
     )
 
+    manager.assign_task(
+        "security-agent",
+        "generate_kem_keypair",
+        description="Generate ML-KEM-768 keypair for the demo session",
+        key_id="demo-session-kem",
+    )
+    manager.assign_task(
+        "security-agent",
+        "generate_sig_keypair",
+        description="Generate ML-DSA-65 keypair for agent signing",
+        key_id="demo-session-sig",
+    )
+
     # ----------------------------------------------------------------
     # Main monitoring loop
     # ----------------------------------------------------------------
@@ -117,13 +132,13 @@ def main():
         while True:
             time.sleep(30)
             print(f"\n[{time.strftime('%H:%M:%S')}] System heartbeat — agents active:")
-            for agent in (text_agent, image_agent, video_agent, workflow_agent):
+            for agent in (text_agent, image_agent, video_agent, workflow_agent, security_agent):
                 print(f"  - {agent.agent_id}: {agent.status.value}")
             print(f"\n{manager.get_project_status_report()}")
 
     except KeyboardInterrupt:
         print("\n\n--- Shutting down all agents ---")
-        for agent in (text_agent, image_agent, video_agent, workflow_agent):
+        for agent in (text_agent, image_agent, video_agent, workflow_agent, security_agent):
             agent.stop()
             print(f"  Stopped: {agent.agent_id}")
         manager.stop()

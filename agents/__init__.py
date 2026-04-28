@@ -15,10 +15,12 @@ from agents.text_agent import TextAgent
 from agents.image_agent import ImageAgent
 from agents.video_agent import VideoAgent
 from agents.workflow_agent import WorkflowAgent
+from agents.security_agent import SecurityAgent
 
 __all__ = [
     "TextAgent",
     "ImageAgent",
     "VideoAgent",
     "WorkflowAgent",
+    "SecurityAgent",
 ]

@@ -23,6 +23,7 @@ All agents inherit from `ExtrovertAgent` and are overseen by `LonelyManager`.
 | **ImageAgent** | `agents/image_agent.py` | `image` | Image generation, editing, masking, inpainting, outpainting |
 | **VideoAgent** | `agents/video_agent.py` | `video` | Video trimming, frame sampling, effects, analysis, captioning |
 | **WorkflowAgent** | `agents/workflow_agent.py` | `workflow` | Workflow parsing, ComfyUI/Diffusion export, validation |
+| **SecurityAgent** | `agents/security_agent.py` | `security` | ML-KEM-768 key exchange, ChaCha20-Poly1305 encryption, ML-DSA-65 signing |
 
 ### Agent Documentation
 
@@ -30,6 +31,7 @@ All agents inherit from `ExtrovertAgent` and are overseen by `LonelyManager`.
 - **`agent_image.md`** — Image agent skills, task types, and dispatch examples
 - **`agent_video.md`** — Video agent skills, task types, and dispatch examples
 - **`agent_workflow.md`** — Workflow agent skills, task types, and dispatch examples
+- **`agent_security.md`** — Security agent PQC skills, task types, and dispatch examples
 - **`vaultwares-agentciation/skills.md`** — Full skills reference for all Extrovert agents
 - **`vaultwares-agentciation/extrovert.agent.md`** — Extrovert personality, Redis rules, status enum
 - **`vaultwares-agentciation/lonely-manager.agent.md`** — Manager responsibilities and behaviors
