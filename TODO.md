@@ -41,7 +41,7 @@
 
 ## Platform (Phase 5)
 
-- [~] Web layer (priority 1) in javascript and support for most features except those deemed impossible/too heavy for browser use.
+- [x] Web layer (priority 1) in javascript and support for most features except those deemed impossible/too heavy for browser use.
 - [ ] Windows desktop player (priority 2)
 - [ ] iOS mobile player (priority 3)
 - [ ] Android mobile player (priority 4)

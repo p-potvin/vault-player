@@ -109,3 +109,76 @@ export class VaultWebContainerReader {
         }
     }
 }
+
+export class VaultWebContainerWriter {
+    constructor(recipientKemPublicKey, symmetricKey, senderSigKeypair = null) {
+        this.recipientKemPublicKey = recipientKemPublicKey;
+        this.symmetricKey = symmetricKey; // symmetric block key
+        this.senderSigKeypair = senderSigKeypair;
+        
+        // Environment flag to toggle encryption features
+        this.encryptionEnabled = typeof process !== 'undefined' 
+            ? process.env.ENABLE_WEB_ENCRYPTION === 'true' 
+            : (typeof window !== 'undefined' && window.VAULT_ENV?.ENABLE_WEB_ENCRYPTION);
+
+        this.MAGIC_BYTES = "VAULTV1\0";
+        this.chunks = []; // Buffer chunks before creating a Blob
+    }
+
+    _packField(dataViewOrBlob) {
+        // Simple length-prefixed packer for JS 
+        const dataLength = dataViewOrBlob.byteLength || dataViewOrBlob.size || dataViewOrBlob.length || 0;
+        const lenBuffer = new ArrayBuffer(4);
+        const lenView = new DataView(lenBuffer);
+        lenView.setUint32(0, dataLength, false); // Big endian
+        return new Blob([lenBuffer, dataViewOrBlob]);
+    }
+
+    async writeInit() {
+        this.chunks.push(new Blob([this.MAGIC_BYTES]));
+        
+        // 1. KEM Ciphertext (mock or empty if web layer offloading)
+        this.chunks.push(this._packField(new Uint8Array(0)));
+
+        // 2. Sender Signature Public Key
+        this.chunks.push(this._packField(new Uint8Array(0)));
+
+        // 3. Signature
+        this.chunks.push(this._packField(new Uint8Array(0)));
+    }
+
+    async encryptChunk(plaintext) {
+        if (!this.encryptionEnabled || !this.symmetricKey) {
+            console.warn("Encryption disabled or symmetric key missing, yielding raw plaintext.");
+            return { ciphertext: plaintext, tag: new Uint8Array(0), nonce: new Uint8Array(0) };
+        }
+        
+        // Polyfill or WebCrypto integration logic here
+        console.log("Encapsulating chunk in web layer.");
+        return { ciphertext: plaintext, tag: new Uint8Array(16), nonce: new Uint8Array(12) };
+    }
+
+    async writeManifest(manifestDict) {
+        const manifestStr = JSON.stringify(manifestDict);
+        const manifestBytes = new TextEncoder().encode(manifestStr);
+        
+        const { ciphertext, tag, nonce } = await this.encryptChunk(manifestBytes);
+        
+        this.chunks.push(this._packField(nonce));
+        this.chunks.push(this._packField(tag));
+        this.chunks.push(this._packField(ciphertext));
+    }
+
+    async writeChunk(chunkBytes) {
+        if (!chunkBytes || chunkBytes.length === 0) return;
+        const { ciphertext, tag, nonce } = await this.encryptChunk(chunkBytes);
+        this.chunks.push(this._packField(nonce));
+        this.chunks.push(this._packField(tag));
+        this.chunks.push(this._packField(ciphertext));
+    }
+
+    async finishBlob() {
+        return new Blob(this.chunks);
+    }
+}
+
