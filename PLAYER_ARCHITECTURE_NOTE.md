@@ -12,6 +12,6 @@ This project is slated to adapt the custom hardware-accelerated video modal and 
 
 ## Implementation Pipeline
 
-- Rip the `<div id="video-modal">` mapping and CSS from `vault-explorer/index.html`.
-- Fork the exact `processFfmpegQueue` for asynchronous hardware nvenc previews.
-- Ensure the `<input type="range">` seekbar utilizes the custom `%27` encoding sequence.
+- [x] Rip the `<div id="video-modal">` mapping and CSS from `vault-explorer/index.html`.
+- [x] Fork the exact `processFfmpegQueue` for asynchronous hardware nvenc previews.
+- [x] Ensure the `<input type="range">` seekbar utilizes the custom `%27` encoding sequence.

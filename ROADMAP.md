@@ -8,6 +8,12 @@
 - [x] Add local theme manager for theme integration
 - [ ] Apply VaultWares branding to all agent output and logs
 
+## Phase 1.5 — Core Player Extraction
+
+- [x] Extract `video-modal` Chrome-less UI from `vault-explorer`
+- [x] Port `VaultVideoPlayer` JavaScript class and `processFfmpegQueue`
+- [x] Preserve local path encoding (`%27`) for trickplay previews
+
 ## Phase 2 — Custom Container Format
 
 - [ ] Design custom VaultWares media container format with internal manifest
