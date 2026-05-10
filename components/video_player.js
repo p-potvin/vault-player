@@ -203,13 +203,15 @@ export class VaultVideoPlayer {
         if (vp.paused) {
             vp.play();
             if (btnPlay) {
-                btnPlay.innerHTML = '&#10074;&#10074;';
+                const ppPath = btnPlay.querySelector('path');
+                if (ppPath) ppPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
                 btnPlay.setAttribute('aria-label', 'Pause');
             }
         } else {
             vp.pause();
             if (btnPlay) {
-                btnPlay.innerHTML = '&#9654;';
+                const ppPath = btnPlay.querySelector('path');
+                if (ppPath) ppPath.setAttribute('d', 'M8 5v14l11-7z');
                 btnPlay.setAttribute('aria-label', 'Play');
             }
         }
@@ -222,7 +224,8 @@ export class VaultVideoPlayer {
         vp.dataset.trickplay = trickplayFolder || '';
         vp.src = this.sanitizePath(videoPath);
         if (btnPlay) {
-            btnPlay.innerHTML = '&#10074;&#10074;';
+            const ppPath = btnPlay.querySelector('path');
+            if (ppPath) ppPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
             btnPlay.setAttribute('aria-label', 'Pause');
         }
         if (pqcBadge) pqcBadge.classList.remove('visible');
@@ -254,7 +257,8 @@ export class VaultVideoPlayer {
         vp.src = this._blobUrl;
 
         if (btnPlay) {
-            btnPlay.innerHTML = '&#10074;&#10074;';
+            const ppPath = btnPlay.querySelector('path');
+            if (ppPath) ppPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
             btnPlay.setAttribute('aria-label', 'Pause');
         }
 
