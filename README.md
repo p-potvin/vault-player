@@ -20,6 +20,9 @@ VaultPlayer delivers secure, local-first video playback with dynamic AI enhancem
 - Bilingual (EN/FR) interface
 - Redis-based agent orchestration (upgraded to Google ADK where applicable)
 - Theme support via vault-themes submodule
+- Web layer encryption handling (VaultWebContainerWriter)
+- Post-Quantum Cryptography (PQC) Protocol with ML-KEM-768 and ML-DSA-65
+- Extracted video-modal Chrome-less UI from vault-explorer
 
 ## Quick Start
 

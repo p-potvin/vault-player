@@ -145,8 +145,8 @@ export class VaultVideoPlayer {
                     if (this.trickFrames.length > 0) {
                         const idx = Math.floor(percent * this.trickFrames.length);
                         if (this.trickFrames[idx]) {
-                            // strictly enforce %27 escaping logic
-                            seekPreview.style.backgroundImage = `url('${this.sanitizePath(this.trickFrames[idx])}')`;
+                            // strictly enforce %27 escaping logic with CSS.escape
+                            seekPreview.style.backgroundImage = `url('${CSS.escape(this.sanitizePath(this.trickFrames[idx]))}')`;
                         }
                     }
                 }
@@ -203,13 +203,13 @@ export class VaultVideoPlayer {
         if (vp.paused) {
             vp.play();
             if (btnPlay) {
-                btnPlay.innerHTML = '&#10074;&#10074;';
+                btnPlay.textContent = '❚❚';
                 btnPlay.setAttribute('aria-label', 'Pause');
             }
         } else {
             vp.pause();
             if (btnPlay) {
-                btnPlay.innerHTML = '&#9654;';
+                btnPlay.textContent = '▶';
                 btnPlay.setAttribute('aria-label', 'Play');
             }
         }
@@ -222,7 +222,7 @@ export class VaultVideoPlayer {
         vp.dataset.trickplay = trickplayFolder || '';
         vp.src = this.sanitizePath(videoPath);
         if (btnPlay) {
-            btnPlay.innerHTML = '&#10074;&#10074;';
+            btnPlay.textContent = '❚❚';
             btnPlay.setAttribute('aria-label', 'Pause');
         }
         if (pqcBadge) pqcBadge.classList.remove('visible');
@@ -254,7 +254,7 @@ export class VaultVideoPlayer {
         vp.src = this._blobUrl;
 
         if (btnPlay) {
-            btnPlay.innerHTML = '&#10074;&#10074;';
+            btnPlay.textContent = '❚❚';
             btnPlay.setAttribute('aria-label', 'Pause');
         }
 
