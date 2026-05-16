@@ -14,6 +14,9 @@ VaultPlayer delivers secure, local-first video playback with dynamic AI enhancem
 ## Features
 
 - End-to-end encryption for media and filters
+- Post-Quantum Cryptography (PQC) Protocol with ML-KEM-768
+- Custom VaultWares media container format with standard export
+- Extracted Chrome-less UI for core media playback
 - Real-time AI effects using local models
 - Multi-agent coordination (Text, Image, Video, Workflow agents)
 - Seamless integration with vault-flows GUI and pipelines
