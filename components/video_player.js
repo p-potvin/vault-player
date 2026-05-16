@@ -100,7 +100,7 @@ export class VaultVideoPlayer {
                     }
                 }
                 if (timeDisplay) {
-                    timeDisplay.innerText = this.formatDuration(vp.currentTime) + ' / ' + this.formatDuration(vp.duration);
+                    timeDisplay.textContent = this.formatDuration(vp.currentTime) + ' / ' + this.formatDuration(vp.duration);
                 }
             });
 
@@ -146,7 +146,7 @@ export class VaultVideoPlayer {
                         const idx = Math.floor(percent * this.trickFrames.length);
                         if (this.trickFrames[idx]) {
                             // strictly enforce %27 escaping logic
-                            seekPreview.style.backgroundImage = `url('${this.sanitizePath(this.trickFrames[idx])}')`;
+                            seekPreview.style.backgroundImage = `url('${CSS.escape(this.sanitizePath(this.trickFrames[idx]))}')`;
                         }
                     }
                 }
