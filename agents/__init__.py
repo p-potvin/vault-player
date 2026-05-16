@@ -11,16 +11,34 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from agents.text_agent import TextAgent
-from agents.image_agent import ImageAgent
-from agents.video_agent import VideoAgent
-from agents.workflow_agent import WorkflowAgent
-from agents.security_agent import SecurityAgent
+__all__ = []
 
-__all__ = [
-    "TextAgent",
-    "ImageAgent",
-    "VideoAgent",
-    "WorkflowAgent",
-    "SecurityAgent",
-]
+try:
+    from agents.text_agent import TextAgent
+    __all__.append("TextAgent")
+except ImportError:
+    pass
+
+try:
+    from agents.image_agent import ImageAgent
+    __all__.append("ImageAgent")
+except ImportError:
+    pass
+
+try:
+    from agents.video_agent import VideoAgent
+    __all__.append("VideoAgent")
+except ImportError:
+    pass
+
+try:
+    from agents.workflow_agent import WorkflowAgent
+    __all__.append("WorkflowAgent")
+except ImportError:
+    pass
+
+try:
+    from agents.security_agent import SecurityAgent
+    __all__.append("SecurityAgent")
+except ImportError:
+    pass
