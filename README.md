@@ -9,7 +9,7 @@
 
 ## Overview
 
-VaultPlayer delivers secure, local-first video playback with dynamic AI enhancements (filters, subtitles, translation, object detection, style transfer, etc.) powered by realtime-stt, vaultwares-pipelines, and the VaultWares agent team.
+VaultPlayer delivers secure, local-first video playback with dynamic AI enhancements (filters, subtitles, translation, object detection, style transfer, etc.) powered by vaultwares-realtime, vaultwares-pipelines, and the VaultWares agent team.
 
 ## Features
 
