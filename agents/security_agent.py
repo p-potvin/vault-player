@@ -4,6 +4,24 @@ import time
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from vaultwares_agentciation.extrovert_agent import ExtrovertAgent
+from components.theme_manager import VaultThemeManager
+
+# Initialize the theme manager and retrieve the default theme
+_theme_manager = VaultThemeManager()
+_theme = _theme_manager.get_theme()
+
+def _hex_to_ansi(hex_color: str, is_bg: bool = False) -> str:
+    """Convert a hex color string to an ANSI true-color escape sequence."""
+    hex_color = hex_color.lstrip('#')
+    if len(hex_color) != 6:
+        return ""
+    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    prefix = "48" if is_bg else "38"
+    return f"\033[{prefix};2;{r};{g};{b}m"
+
+def _c(text: str, hex_color: str) -> str:
+    """Helper to colorize a string and reset it."""
+    return f"{_hex_to_ansi(hex_color)}{text}\033[0m"
 from vaultwares_agentciation.enums import AgentStatus
 
 
@@ -59,7 +77,7 @@ class SecurityAgent(ExtrovertAgent):
 
     def _perform_task(self, task: str, details: dict):
         """Execute a PQC security task based on the task identifier."""
-        print(f"🔐 [{self.agent_id}] Executing security task: {task}")
+        print(_c(f"🔐 [{self.agent_id}] Executing security task: {task}", _theme.accent))
 
         handlers = {
             "generate_kem_keypair": self._generate_kem_keypair,
@@ -77,7 +95,7 @@ class SecurityAgent(ExtrovertAgent):
         if handler:
             handler(details)
         else:
-            print(f"⚠️  [{self.agent_id}] Unknown security task: {task}. Logging and continuing.")
+            print(_c(f"⚠️  [{self.agent_id}] Unknown security task: {task}. Logging and continuing.", _theme.warning))
             self._log_unknown_task(task, details)
 
     # ------------------------------------------------------------------
@@ -89,7 +107,7 @@ class SecurityAgent(ExtrovertAgent):
         from components.pqc_crypto import PQCKeyPair, PQCUnavailableError
 
         key_id = details.get("key_id", f"kem-{int(time.time())}")
-        print(f"🔑 [{self.agent_id}] Generating ML-KEM-768 keypair | key_id={key_id}")
+        print(_c(f"🔑 [{self.agent_id}] Generating ML-KEM-768 keypair | key_id={key_id}", _theme.info))
         try:
             keypair = PQCKeyPair.generate_kem()
             self._kem_keys[key_id] = {
@@ -100,7 +118,7 @@ class SecurityAgent(ExtrovertAgent):
                 f"ML-KEM-768 keypair generated | key_id={key_id} | "
                 f"public_key_len={len(keypair.public_key)}B"
             )
-            print(f"✅ [{self.agent_id}] {result}")
+            print(_c(f"✅ [{self.agent_id}] {result}", _theme.success))
             self._publish_result("generate_kem_keypair", result, {"key_id": key_id})
         except PQCUnavailableError as exc:
             self._publish_error("generate_kem_keypair", str(exc))
@@ -110,7 +128,7 @@ class SecurityAgent(ExtrovertAgent):
         from components.pqc_crypto import PQCKeyPair, PQCUnavailableError
 
         key_id = details.get("key_id", f"sig-{int(time.time())}")
-        print(f"🖊️  [{self.agent_id}] Generating ML-DSA-65 keypair | key_id={key_id}")
+        print(_c(f"🖊️  [{self.agent_id}] Generating ML-DSA-65 keypair | key_id={key_id}", _theme.info))
         try:
             keypair = PQCKeyPair.generate_sig()
             self._sig_keys[key_id] = {
@@ -121,7 +139,7 @@ class SecurityAgent(ExtrovertAgent):
                 f"ML-DSA-65 keypair generated | key_id={key_id} | "
                 f"public_key_len={len(keypair.public_key)}B"
             )
-            print(f"✅ [{self.agent_id}] {result}")
+            print(_c(f"✅ [{self.agent_id}] {result}", _theme.success))
             self._publish_result("generate_sig_keypair", result, {"key_id": key_id})
         except PQCUnavailableError as exc:
             self._publish_error("generate_sig_keypair", str(exc))
@@ -153,7 +171,7 @@ class SecurityAgent(ExtrovertAgent):
         associated_data = details.get("associated_data", "")
         ad_bytes = associated_data.encode() if isinstance(associated_data, str) else associated_data
 
-        print(f"🔒 [{self.agent_id}] Encrypting payload | size={len(payload)}B | recipient={recipient_key_id}")
+        print(_c(f"🔒 [{self.agent_id}] Encrypting payload | size={len(payload)}B | recipient={recipient_key_id}", _theme.info))
         try:
             encryptor = PQCEncryptor.from_kem_public_key(kem_entry["public_key"])
             ciphertext, tag, nonce = encryptor.encrypt(payload, associated_data=ad_bytes or None)
@@ -161,7 +179,7 @@ class SecurityAgent(ExtrovertAgent):
                 f"Payload encrypted | ciphertext_len={len(ciphertext)}B | "
                 f"nonce_len={len(nonce)}B | tag_len={len(tag)}B"
             )
-            print(f"✅ [{self.agent_id}] {result}")
+            print(_c(f"✅ [{self.agent_id}] {result}", _theme.success))
             self._publish_result(
                 "encrypt_payload",
                 result,
@@ -207,12 +225,12 @@ class SecurityAgent(ExtrovertAgent):
         associated_data = details.get("associated_data", "")
         ad_bytes = associated_data.encode() if isinstance(associated_data, str) else associated_data
 
-        print(f"🔓 [{self.agent_id}] Decrypting payload | ciphertext_len={len(ciphertext)}B")
+        print(_c(f"🔓 [{self.agent_id}] Decrypting payload | ciphertext_len={len(ciphertext)}B", _theme.info))
         try:
             decryptor = PQCEncryptor.from_kem_private_key(kem_entry["private_key"], kem_ciphertext)
             plaintext = decryptor.decrypt(ciphertext, tag, nonce, associated_data=ad_bytes or None)
             result = f"Payload decrypted successfully | plaintext_len={len(plaintext)}B"
-            print(f"✅ [{self.agent_id}] {result}")
+            print(_c(f"✅ [{self.agent_id}] {result}", _theme.success))
             self._publish_result("decrypt_payload", result)
         except (PQCDecryptionError, PQCUnavailableError) as exc:
             self._publish_error("decrypt_payload", str(exc))
@@ -241,7 +259,7 @@ class SecurityAgent(ExtrovertAgent):
         if isinstance(payload, str):
             payload = payload.encode()
 
-        print(f"🖊️  [{self.agent_id}] Signing payload | size={len(payload)}B | key={sig_key_id}")
+        print(_c(f"🖊️  [{self.agent_id}] Signing payload | size={len(payload)}B | key={sig_key_id}", _theme.info))
         try:
             from components.pqc_crypto import SIG_ALGORITHM
             keypair = PQCKeyPair(
@@ -252,7 +270,7 @@ class SecurityAgent(ExtrovertAgent):
             signer = PQCSigner(keypair)
             signature = signer.sign(payload)
             result = f"Payload signed | signature_len={len(signature)}B | key={sig_key_id}"
-            print(f"✅ [{self.agent_id}] {result}")
+            print(_c(f"✅ [{self.agent_id}] {result}", _theme.success))
             self._publish_result(
                 "sign_payload",
                 result,
@@ -286,12 +304,12 @@ class SecurityAgent(ExtrovertAgent):
             self._publish_error("verify_payload", f"Invalid signature fields: {exc}")
             return
 
-        print(f"🔎 [{self.agent_id}] Verifying ML-DSA-65 signature | msg_len={len(payload)}B")
+        print(_c(f"🔎 [{self.agent_id}] Verifying ML-DSA-65 signature | msg_len={len(payload)}B", _theme.info))
         try:
             valid = PQCSigner.verify(payload, signature, public_key)
             status = "VALID" if valid else "INVALID"
             result = f"Signature verification: {status}"
-            print(f"{'✅' if valid else '❌'} [{self.agent_id}] {result}")
+            print(_c(f"{'✅' if valid else '❌'} [{self.agent_id}] {result}", _theme.success if valid else _theme.error))
             self._publish_result("verify_payload", result, {"valid": valid})
         except PQCUnavailableError as exc:
             self._publish_error("verify_payload", str(exc))
@@ -341,10 +359,11 @@ class SecurityAgent(ExtrovertAgent):
                     private_key=sig_entry["private_key"],
                 )
 
-        print(
+        print(_c(
             f"📦 [{self.agent_id}] Sealing envelope | size={len(payload)}B | "
-            f"recipient={recipient_key_id} | signed={sender_sig_keypair is not None}"
-        )
+            f"recipient={recipient_key_id} | signed={sender_sig_keypair is not None}",
+            _theme.info
+        ))
         try:
             envelope = seal(
                 payload,
@@ -354,7 +373,7 @@ class SecurityAgent(ExtrovertAgent):
             )
             raw = envelope.to_bytes()
             result = f"Envelope sealed | envelope_len={len(raw)}B | signed={envelope.signature is not None}"
-            print(f"✅ [{self.agent_id}] {result}")
+            print(_c(f"✅ [{self.agent_id}] {result}", _theme.success))
             self._publish_result("seal_envelope", result, {"envelope": raw.hex()})
         except PQCUnavailableError as exc:
             self._publish_error("seal_envelope", str(exc))
@@ -393,7 +412,7 @@ class SecurityAgent(ExtrovertAgent):
         ad_bytes = associated_data.encode() if isinstance(associated_data, str) else associated_data
         verify_sig = details.get("verify_signature", True)
 
-        print(f"📬 [{self.agent_id}] Opening envelope | verify_sig={verify_sig}")
+        print(_c(f"📬 [{self.agent_id}] Opening envelope | verify_sig={verify_sig}", _theme.info))
         try:
             plaintext = open_envelope(
                 envelope,
@@ -402,7 +421,7 @@ class SecurityAgent(ExtrovertAgent):
                 verify_signature=verify_sig,
             )
             result = f"Envelope opened successfully | plaintext_len={len(plaintext)}B"
-            print(f"✅ [{self.agent_id}] {result}")
+            print(_c(f"✅ [{self.agent_id}] {result}", _theme.success))
             self._publish_result("open_envelope", result)
         except (PQCDecryptionError, PQCUnavailableError, ValueError) as exc:
             self._publish_error("open_envelope", str(exc))
@@ -428,7 +447,7 @@ class SecurityAgent(ExtrovertAgent):
             self._publish_error("rotate_keys", f"Invalid key_type '{key_type}' — must be 'kem' or 'sig'")
             return
 
-        print(f"🔄 [{self.agent_id}] Rotating {key_type.upper()} key | key_id={key_id}")
+        print(_c(f"🔄 [{self.agent_id}] Rotating {key_type.upper()} key | key_id={key_id}", _theme.info))
         try:
             if key_type == "kem":
                 keypair = PQCKeyPair.generate_kem()
@@ -446,7 +465,7 @@ class SecurityAgent(ExtrovertAgent):
                 f"{key_type.upper()} key rotated | key_id={key_id} | "
                 f"public_key_len={len(keypair.public_key)}B"
             )
-            print(f"✅ [{self.agent_id}] {result}")
+            print(_c(f"✅ [{self.agent_id}] {result}", _theme.success))
             self._publish_result("rotate_keys", result, {"key_id": key_id, "key_type": key_type})
         except PQCUnavailableError as exc:
             self._publish_error("rotate_keys", str(exc))
@@ -457,7 +476,7 @@ class SecurityAgent(ExtrovertAgent):
 
     def _log_unknown_task(self, task: str, details: dict):
         """Log an unrecognized task for debugging."""
-        print(f"📋 [{self.agent_id}] Unknown task '{task}' — details: {details}")
+        print(_c(f"📋 [{self.agent_id}] Unknown task '{task}' — details: {details}", _theme.muted))
 
     def _publish_result(self, task: str, result: str, extra: dict | None = None):
         """Publish a task result back to the Redis channel."""
@@ -465,11 +484,11 @@ class SecurityAgent(ExtrovertAgent):
         if extra:
             payload.update(extra)
         self.coordinator.publish("RESULT", task, payload)
-        print(f"📤 [{self.agent_id}] Result published for task '{task}'")
+        print(_c(f"📤 [{self.agent_id}] Result published for task '{task}'", _theme.muted))
 
     def _publish_error(self, task: str, message: str):
         """Publish a task error back to the Redis channel."""
-        print(f"❌ [{self.agent_id}] Error in '{task}': {message}")
+        print(_c(f"❌ [{self.agent_id}] Error in '{task}': {message}", _theme.error))
         self.coordinator.publish(
             "RESULT",
             task,
