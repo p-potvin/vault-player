@@ -2,11 +2,11 @@
 
 ## Branding (Phase 1)
 
-- [x] Read vault-themes Brand Guide and AGENTS.md
-- [x] Add vault-themes to VAULT_DEPENDENCIES.txt
+- [x] Read vaultwares-themes Brand Guide and AGENTS.md
+- [x] Add vaultwares-themes to VAULT_DEPENDENCIES.txt
 - [x] Write branded README.md with mission, color system, typography, and architecture
 - [x] Populate ROADMAP.md with phased roadmap
-- [x] Add local theme_manager.py from vault-themes
+- [x] Add local theme_manager.py from vaultwares-themes
 - [x] Apply VaultWares theme tokens to agent console output
 
 ## Core Player Extraction (Phase 1.5)
@@ -51,6 +51,6 @@
 ## Extensive Redesign and Branding (Phase 6)
 
 - [ ] Add the small logo somewhere and link it with the dark/light theme switch
-- [ ] Follow vault-themes guidelines
+- [ ] Follow vaultwares-themes guidelines
 - [ ] Smooth out the UX/UI with animations and minimalist icons
 - [ ] Add keyboard control and other accessibility features

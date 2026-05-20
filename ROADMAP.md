@@ -2,8 +2,8 @@
 
 ## Phase 1 — Branding & Identity
 
-- [x] Integrate VaultWares Brand Guide from vault-themes
-- [x] Add vault-themes as a project dependency
+- [x] Integrate VaultWares Brand Guide from vaultwares-themes
+- [x] Add vaultwares-themes as a project dependency
 - [x] Document color system, typography, and theme tokens in README
 - [x] Add local theme manager for theme integration
 - [ ] Apply VaultWares branding to all agent output and logs
