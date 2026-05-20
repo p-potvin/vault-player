@@ -19,7 +19,7 @@ VaultPlayer delivers secure, local-first video playback with dynamic AI enhancem
 - Seamless integration with vault-flows GUI and pipelines
 - Bilingual (EN/FR) interface
 - Redis-based agent orchestration (upgraded to Google ADK where applicable)
-- Theme support via vault-themes submodule
+- Theme support via vaultwares-themes submodule
 - In-browser web layer for parsing container formats
 - VaultWares PQC protocol specification
 - Multi-format standard export
@@ -42,7 +42,7 @@ python run_coordinated_system.py
 Architecture &amp; Agent Integration
 Fully synchronized with the VaultWares Agent Knowledge Dissemination System:
 → <https://raw.githubusercontent.com/p-potvin/vaultwares-docs/main/agents/knowledge-dissemination.mdx>
-Uses the Google ADK-powered team from vaultwares-agentciation via the invoke_vaultwares_team skill for complex real-time processing.
+Uses the Google ADK-powered team from vaultwares-adk via the invoke_vaultwares_team skill for complex real-time processing.
 See PLAYER_ARCHITECTURE_NOTE.md, agent_manifest.md, and agent folders for full details.
 Privacy &amp; Security
 
